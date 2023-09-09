@@ -35,7 +35,8 @@ Este proyecto es parte del challenge "One Hotel" del grupo 5 en Alura Latam. Es 
 ## Uso
 
 La aplicación te permite gestionar reservas de hotel y detalles de los huéspedes. Puedes realizar las siguientes acciones:
-
+- Login de Usuarios Registrados
+- Registro de Usuarios para el uso del Sistema
 - Crear, editar y eliminar reservas.
 - Agregar y actualizar datos de huéspedes.
 - Buscar reservas y huéspedes.
