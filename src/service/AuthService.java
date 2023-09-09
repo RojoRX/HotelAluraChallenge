@@ -1,15 +1,12 @@
 package service;
-
 import dao.UserDAO;
 import model.User;
 
 public class AuthService {
     private UserDAO userDAO;
-
     public AuthService(UserDAO userDAO) {
         this.userDAO = userDAO;
     }
-
     public boolean authenticateUser(String username, String password) {
         User user = userDAO.findByUsername(username);
         if (user != null) {

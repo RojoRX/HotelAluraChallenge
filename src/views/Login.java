@@ -250,10 +250,8 @@ public class Login extends JFrame {
     private void Login() {
         String username = txtUsuario.getText();
         String password = new String(txtContrasena.getPassword());
-
         UserDAO userDAO = new UserDAO(yourDatabaseConnection); // Reemplaza 'yourDatabaseConnection' con tu conexión real a la base de datos
         AuthService authService = new AuthService(userDAO);
-
         if (authService.authenticateUser(username, password)) {
             MenuUsuario menu = new MenuUsuario();
             menu.setVisible(true);

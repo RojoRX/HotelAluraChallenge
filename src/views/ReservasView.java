@@ -55,10 +55,6 @@ public class ReservasView extends JFrame {
 	        txtValor.setText(String.format("%.2f", valorReserva));
 	    }
 	}
-
-
-
-
 	/**
 	 * Launch the application.
 	 */
@@ -133,6 +129,9 @@ public class ReservasView extends JFrame {
 		lblCheckOut.setBounds(68, 221, 187, 14);
 		lblCheckOut.setFont(new Font("Roboto Black", Font.PLAIN, 18));
 		panel.add(lblCheckOut);
+		
+		
+		
 		
 		JLabel lblFormaPago = new JLabel("FORMA DE PAGO");
 		lblFormaPago.setForeground(SystemColor.textInactiveText);
@@ -258,12 +257,12 @@ public class ReservasView extends JFrame {
 		
 		JLabel lblSiguiente = new JLabel("SIGUIENTE");
 		lblSiguiente.setHorizontalAlignment(SwingConstants.CENTER);
-		lblSiguiente.setForeground(Color.WHITE);
-		lblSiguiente.setFont(new Font("Roboto", Font.PLAIN, 18));
+		//lblSiguiente.setForeground(Color.BLACK);
+		lblSiguiente.setFont(new Font("Roboto", Font.PLAIN, 118));
 		lblSiguiente.setBounds(0, 0, 122, 35);
 		
 		
-		//Campos que guardaremos en la base de datos
+		// Campos que guardaremos en la base de datos
 		txtFechaEntrada = new JDateChooser();
 		txtFechaEntrada.getCalendarButton().setBackground(SystemColor.textHighlight);
 		txtFechaEntrada.getCalendarButton().setIcon(new ImageIcon(ReservasView.class.getResource("/imagenes/icon-reservas.png")));
@@ -283,19 +282,25 @@ public class ReservasView extends JFrame {
 		txtFechaSalida.getCalendarButton().setBounds(267, 1, 21, 31);
 		txtFechaSalida.setBackground(Color.WHITE);
 		txtFechaSalida.setFont(new Font("Roboto", Font.PLAIN, 18));
-		
-		txtFechaSalida.addPropertyChangeListener(new PropertyChangeListener() {
-		    public void propertyChange(PropertyChangeEvent evt) {
-		        calcularValorReserva();
-		    }
-		});
-		
-		
+
 		txtFechaSalida.setDateFormatString("yyyy-MM-dd");
 		txtFechaSalida.getCalendarButton().setBackground(SystemColor.textHighlight);
 		txtFechaSalida.setBorder(new LineBorder(new Color(255, 255, 255), 0));
 		panel.add(txtFechaSalida);
-
+		txtFechaSalida.addPropertyChangeListener(new PropertyChangeListener() {
+		    public void propertyChange(PropertyChangeEvent evt) {
+		        if ("date".equals(evt.getPropertyName())) {
+		            Date fechaEntrada = txtFechaEntrada.getDate();
+		            Date fechaSalida = txtFechaSalida.getDate();
+		            if (fechaEntrada != null && fechaSalida != null && fechaSalida.before(fechaEntrada)) {
+		                // La fecha de salida es anterior a la fecha de entrada
+		                // Establecer la fecha de salida igual a la fecha de entrada
+		                txtFechaSalida.setDate(fechaEntrada);
+		            }
+		            calcularValorReserva();
+		        }
+		    }
+		});
 		txtValor = new JTextField();
 		txtValor.setBackground(SystemColor.text);
 		txtValor.setForeground(Color.BLACK);
@@ -310,11 +315,8 @@ public class ReservasView extends JFrame {
 		valorPanel.add(Box.createHorizontalGlue()); // Espacio a la izquierda
 		valorPanel.add(txtValor);
 		valorPanel.add(Box.createHorizontalGlue()); // Espacio a la derecha
-
 		valorPanel.setBounds(68, 328, 289, 33); // Ajusta las coordenadas y el tamaño según tus necesidades
 		panel.add(valorPanel);
-
-
 		txtFormaPago = new JComboBox();
 		txtFormaPago.setBounds(68, 417, 289, 38);
 		txtFormaPago.setBackground(SystemColor.text);
@@ -322,38 +324,32 @@ public class ReservasView extends JFrame {
 		txtFormaPago.setFont(new Font("Roboto", Font.PLAIN, 16));
 		txtFormaPago.setModel(new DefaultComboBoxModel(new String[] {"Tarjeta de Crédito", "Tarjeta de Débito", "Dinero en efectivo"}));
 		panel.add(txtFormaPago);
-
 		JPanel btnsiguiente = new JPanel();
 		// Creación e inicialización de ReservaDAO
 		ReservaDAO reservaDAO = new ReservaDAOImpl();
-
 		// Creación de ReservaService y pasando la instancia de ReservaDAO
 		ReservaService reservaService = new ReservaService(reservaDAO);
-
+		String numeroReserva = reservaService.generarNumeroReservaUnico();
+	
 		btnsiguiente.addMouseListener(new MouseAdapter() {
 		    @Override
 		    public void mouseClicked(MouseEvent e) {
 		        if (ReservasView.txtFechaEntrada.getDate() != null && ReservasView.txtFechaSalida.getDate() != null) {
 		            Date fechaEntrada = ReservasView.txtFechaEntrada.getDate();
 		            Date fechaSalida = ReservasView.txtFechaSalida.getDate();
-		            
+		            String id = numeroReserva;
 		            // Obtiene el valor del campo txtValor y reemplaza coma por punto
 		            String valorTexto = ReservasView.txtValor.getText();
 		            valorTexto = valorTexto.replace(",", ".");
-		            
 		            try {
 		                // Convierte el valor a double
 		                double valor = Double.parseDouble(valorTexto);
-		                
 		                String formaPago = (String) ReservasView.txtFormaPago.getSelectedItem();
 		                // Crear la instancia de ReservaService y usarla
 		                ReservaService reservaService = new ReservaService(reservaDAO);
-		                
 		                try {
-		                    
-		                    String numeroReserva = reservaService.generarNumeroReservaUnico(); // Genera el número de reserva
-		                    Reserva reserva = reservaService.crearReserva(fechaEntrada, fechaSalida, valor, formaPago);
-		                    
+		                    Reserva reserva = reservaService.crearReserva(id,fechaEntrada, fechaSalida, valor, formaPago);
+		                    System.out.println("Valor en Reservas" + " "+ numeroReserva + " " + id);
 		                    RegistroHuesped registro = new RegistroHuesped(numeroReserva); // Usa el constructor con el número de reserva
 		                    registro.setVisible(true);
 		                    dispose();
@@ -368,16 +364,11 @@ public class ReservasView extends JFrame {
 		        }
 		    }
 		});
-
-		
-		
 		btnsiguiente.setLayout(null);
 		btnsiguiente.setBackground(SystemColor.textHighlight);
 		btnsiguiente.setBounds(238, 493, 122, 35);
 		panel.add(btnsiguiente);
 		btnsiguiente.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-
-
 	}
 		
 	//Código que permite mover la ventana por la pantalla según la posición de "x" y "y"	

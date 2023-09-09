@@ -93,14 +93,22 @@ public class RegistrationForm extends JFrame {
     private void registerUser() {
         String username = txtUsername.getText();
         String password = new String(txtPassword.getPassword());
-
+        if (!isValidInput(username)) {
+            JOptionPane.showMessageDialog(this, "Nombre de usuario inválido. Asegúrate de ingresarlo correctamente.");
+            return;
+        }
         RegistrationService registrationService = new RegistrationService(new UserDAO(yourDatabaseConnection));
         RegistrationService.RegistrationResult result = registrationService.registerUser(username, password);
-
         handleRegistrationResult(result);
+        MenuPrincipal menuPrincipal = new MenuPrincipal();
+        menuPrincipal.setVisible(true);
+        dispose();
     }
-
-    private void handleRegistrationResult(RegistrationService.RegistrationResult result) {
+    private boolean isValidInput(String input) {
+        String pattern = "^[a-zA-Z0-9]*$"; // Puedes ajustar el patrón según tus necesidades
+        return input.matches(pattern);
+    }
+	private void handleRegistrationResult(RegistrationService.RegistrationResult result) {
         switch (result) {
             case SUCCESS:
                 JOptionPane.showMessageDialog(this, "Registro exitoso. Ahora puedes iniciar sesión.");
@@ -120,7 +128,6 @@ public class RegistrationForm extends JFrame {
                 break;
         }
     }
-
     public static void main(String[] args) {
         EventQueue.invokeLater(new Runnable() {
             public void run() {

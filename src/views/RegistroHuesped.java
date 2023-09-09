@@ -19,15 +19,31 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.text.Format;
 import java.awt.event.ActionEvent;
 import java.awt.Toolkit;
 import javax.swing.SwingConstants;
 import javax.swing.JSeparator;
+import java.util.Date;
+
+import dao.DatabaseManager;
+import dao.HuespedDAO;
+import dao.HuespedDAOImpl;
+import dao.ReservaDAOImpl;
+import service.HuespedService;
+import service.ReservaService;
+import model.Huesped;
+import model.Reserva;
+import dao.HuespedDAO;
+import dao.ReservaDAO;
 
 @SuppressWarnings("serial")
 public class RegistroHuesped extends JFrame {
 
+	protected static final int MIN_LONGITUD_NOMBRE = 4;
+	protected static final int MIN_LONGITUD_APELLIDO = 4;
 	private JPanel contentPane;
 	private JTextField txtNombre;
 	private JTextField txtApellido;
@@ -53,6 +69,7 @@ public class RegistroHuesped extends JFrame {
 					e.printStackTrace();
 				}
 			}
+			
 		});
 	}
 
@@ -148,7 +165,20 @@ public class RegistroHuesped extends JFrame {
 		txtFechaN.getCalendarButton().setIcon(new ImageIcon(RegistroHuesped.class.getResource("/imagenes/icon-reservas.png")));
 		txtFechaN.getCalendarButton().setBackground(SystemColor.textHighlight);
 		txtFechaN.setDateFormatString("yyyy-MM-dd");
+		// Desactivar la entrada manual de la fecha
+		txtFechaN.getDateEditor().setEnabled(false);
+
+		// Cambiar el estilo de fuente y color de las letras en la fecha seleccionada
+		JTextField editor = (JTextField) txtFechaN.getDateEditor().getUiComponent();
+		editor.setForeground(Color.BLACK);  // Cambiar el color de las letras
+		editor.setFont(new Font("Roboto", Font.PLAIN, 16));  // Cambiar la fuente y el tamaño
+
+		// Ajustar el color de fondo para resaltar los datos seleccionados
+		editor.setBackground(Color.WHITE);
+
 		contentPane.add(txtFechaN);
+
+
 		
 		txtNacionalidad = new JComboBox();
 		txtNacionalidad.setBounds(560, 350, 289, 36);
@@ -251,11 +281,84 @@ public class RegistroHuesped extends JFrame {
 		
 		JPanel btnguardar = new JPanel();
 		btnguardar.setBounds(723, 560, 122, 35);
+		ReservaDAO reservaDAO = new ReservaDAOImpl();
+		HuespedDAO huespedDAO = new HuespedDAOImpl();
+		HuespedService huespedService = new HuespedService(huespedDAO);
+		
+		
 		btnguardar.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
+		    @Override
+		    public void mouseClicked(MouseEvent e) {
+		        registrarHuesped();
+		    }
+		    
+		    private void registrarHuesped() {
+			    Connection connection = null;
+			    String valorTexto = ReservasView.txtValor.getText();
+			    valorTexto = valorTexto.replace(",", ".");
+
+			    // Obtener los valores de los campos
+			    String nombre = txtNombre.getText().trim();
+			    String apellido = txtApellido.getText().trim();
+			    Date fechaNacimiento = txtFechaN.getDate();
+			    String nacionalidad = (String) txtNacionalidad.getSelectedItem();
+			    String telefono = txtTelefono.getText().trim();
+			    String idReserva = numeroReserva;
+
+			    try {
+			        // Validaciones
+			        if (nombre.length() < MIN_LONGITUD_NOMBRE || apellido.length() < MIN_LONGITUD_APELLIDO) {
+			            JOptionPane.showMessageDialog(null, "El nombre y el apellido deben tener al menos " +
+			                    MIN_LONGITUD_NOMBRE + " y " + MIN_LONGITUD_APELLIDO + " caracteres respectivamente.",
+			                    "Error de validación", JOptionPane.ERROR_MESSAGE);
+			            return; // Detener el proceso de registro
+			        }
+			        if (!isValidInput(txtNombre.getText()) || !isValidInput(txtApellido.getText())) {
+			            JOptionPane.showMessageDialog(null, "Los campos de nombre y apellido no pueden contener caracteres especiales.");
+			            return;
+			        }
+
+			        connection = DatabaseManager.getConnection();
+			        connection.setAutoCommit(false);
+
+			        // Registrar el huésped solo si las validaciones pasan
+			        Huesped huesped = huespedService.registrarHuesped(nombre, apellido, fechaNacimiento, nacionalidad, telefono, idReserva);
+			        connection.commit();
+
+			        String mensajeExito = "Huésped registrado exitosamente.\nNúmero de reserva: " + numeroReserva;
+			        JOptionPane.showMessageDialog(null, mensajeExito, "Registro exitoso", JOptionPane.INFORMATION_MESSAGE);
+
+			        // Cerrar la ventana después de un registro exitoso
+			        RegistroHuesped.this.dispose();
+			        MenuUsuario menuUsuario = new MenuUsuario();
+			        menuUsuario.setVisible(true);
+			    } catch (Exception ex) {
+			        if (connection != null) {
+			            try {
+			                connection.rollback();
+			            } catch (SQLException rollbackEx) {
+			                // Manejar el error de rollback
+			            }
+			        }
+			        // Manejar el error
+			        JOptionPane.showMessageDialog(null, "Ocurrió un error al registrar al huésped", "Error", JOptionPane.ERROR_MESSAGE);
+			    } finally {
+			        DatabaseManager.closeResources(connection, null, null);
+			    }
 			}
+			// Función de validación de formato de teléfono
+			private boolean isValidInput(String input) {
+			    String pattern = "^[a-zA-Z0-9 ]*$";
+			    return input.matches(pattern);
+			}
+
 		});
+
+		
+
+
+
+		
 		btnguardar.setLayout(null);
 		btnguardar.setBackground(new Color(12, 138, 199));
 		contentPane.add(btnguardar);

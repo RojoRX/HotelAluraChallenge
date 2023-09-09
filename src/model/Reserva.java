@@ -1,15 +1,12 @@
 package model;
-
 import java.util.Date;
 
 public class Reserva {
-    private int id;
+    private String id;
     private Date fechaEntrada;
     private Date fechaSalida;
     private double valor;
     private String formaPago;
-    private String numeroReserva;
-    
 	public Date getFechaEntrada() {
 		return fechaEntrada;
 	}
@@ -34,15 +31,11 @@ public class Reserva {
 	public void setFormaPago(String formaPago) {
 		this.formaPago = formaPago;
 	}
-	public int getId() {
+	public String getId() {
 		return id;
 	}
-	public String getNumeroReserva() {
-		return numeroReserva;
-	}
-	public void setNumeroReserva(String numeroReserva) {
-		this.numeroReserva = numeroReserva;
+	public void setId(String id) {
+		this.id = id;
 	}
 
-    
 }
